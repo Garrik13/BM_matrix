@@ -104,8 +104,6 @@
     </div>
   </div>
 
-  <script src="matrix-data-template.json" type="application/json" id="dataFile"></script>
-
   <script>
     const VARIANTS = ["Доходно-расходная", "Затратная"];
     const TYPES = ["Моно продукт", "Вендор", "Интегратор", "Инфраструктурный моно продукт", "Операционный"];
@@ -118,8 +116,32 @@
       "оперфонд"
     ];
 
-    // Загружаем данные из JSON-тега
-    const DATA = JSON.parse(document.getElementById('dataFile').textContent);
+    // ====== ШАБЛОН СО ВСЕМИ КОМБИНАЦИЯМИ ======
+    const DATA = {};
+    for (const variant of VARIANTS){
+      DATA[variant] = {};
+      for (const type of TYPES){
+        DATA[variant][type] = {};
+        for (const cls of CLASSES){
+          DATA[variant][type][cls] = {};
+          for (const stage of STAGES){
+            DATA[variant][type][cls][stage] = {
+              stageDescription: "", // описание стадии
+              approachDescription: "", // описание выбора подхода
+              approaches: {
+                "Либеральный": "",
+                "Умеренный": "",
+                "Консервативный": ""
+              },
+              criteria: {
+                qualitative: [], // массив строк для качественных критериев
+                quantitative: [] // массив строк для количественных критериев
+              }
+            };
+          }
+        }
+      }
+    }
 
     const state = { variant:null, type:null, class:null, stage:null };
 
@@ -168,9 +190,9 @@
           <p>${data.approachDescription || "(пусто)"}</p>
           <h3>Подходы</h3>
           <div class="approaches">
-            ${Object.entries(data.approaches).map(([k,v])=>
-              `<div class="approach-card"><strong>${k}</strong><br>${v || "(пусто)"}</div>`
-            ).join('')}
+            ${Object.entries(data.approaches).map(([k,v])=>`
+              <div class="approach-card"><strong>${k}</strong><br>${v || "(пусто)"}</div>
+            `).join('')}
           </div>
           <h3>Критерии</h3>
           <div class="criteria-block">
