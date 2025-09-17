@@ -159,13 +159,13 @@
         cellTitle.textContent = `${state.variant} × ${state.type} × ${state.class} × ${state.stage}`;
         cellBody.innerHTML = `
           <h3>Описание стадии</h3>
-          <p>${data.stageDescription || "(пусто)"}</p>
+          <p>${data.stageDescription || "(не заполненно)"}</p>
           <h3>Описание выбора подхода</h3>
-          <p>${data.approachDescription || "(пусто)"}</p>
+          <p>${data.approachDescription || "(не заполненно)"}</p>
           <h3>Подходы</h3>
           <div class="approaches">
             ${Object.entries(data.approaches).map(([k,v])=>
-              `<div class="approach-card"><strong>${k}</strong><br>${v || "(пусто)"}</div>`
+              `<div class="approach-card"><strong>${k}</strong><br>${v || "(не заполненно)"}</div>`
             ).join('')}
           </div>
           <h3>Критерии</h3>
