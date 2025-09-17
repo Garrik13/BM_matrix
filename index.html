@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Навигатор бизнес-моделей</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      background: #f9fafb;
+      color: #111827;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .app {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 24px;
+      width: 100%;
+      max-width: 1200px;
+    }
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .sidebar h2 {
+      font-size: 16px;
+      margin: 0 0 8px;
+    }
+    button.option {
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      text-align: left;
+    }
+    button.option:hover { background: #f3f4f6; }
+    button.option.active { border-color: #2563eb; background: #eff6ff; }
+
+    .main {
+      display: grid;
+      gap: 16px;
+    }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .content {
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 20px;
+      background: #fff;
+      min-height: 200px;
+    }
+    h2 { margin: 0 0 12px; font-size: 18px; }
+    h3 { margin: 12px 0 6px; font-size: 16px; }
+    ul { margin: 4px 0 12px 20px; }
+    .approaches { display: flex; gap: 12px; flex-wrap: wrap; }
+    .approach-card {
+      flex: 1;
+      min-width: 180px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      padding: 12px;
+      background: #f9fafb;
+    }
+    .criteria-block {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: #f9fafb;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="sidebar">
+      <h2>Стадии цикла</h2>
+      <div id="stageCol"></div>
+    </div>
+
+    <div class="main">
+      <div>
+        <h2>Вариант бизнес-модели</h2>
+        <div class="row" id="variantRow"></div>
+      </div>
+      <div>
+        <h2>Тип бизнес-модели</h2>
+        <div class="row" id="typeRow"></div>
+      </div>
+      <div>
+        <h2>Класс</h2>
+        <div class="row" id="classRow"></div>
+      </div>
+      <div class="content" id="contentArea">
+        <h2 id="cellTitle">Содержимое комбинации</h2>
+        <div id="cellBody">Выберите комбинацию, чтобы увидеть информацию.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const VARIANTS = ["Доходно-расходная", "Затратная"];
+    const TYPES = ["Моно продукт", "Вендор", "Интегратор", "Инфраструктурный моно продукт", "Операционный"];
+    const CLASSES = ["Якорь", "Сателлит", "Внешний клиент", "Внутренний клиент"];
+    const STAGES = [
+      "0 стадия",
+      "1 стадия - Этап снятие неопределенностей: продукт, рынок, конкуренция",
+      "1 стадия - предмасштабирование: каналы и БМ",
+      "2 стадия",
+      "оперфонд"
+    ];
+
+    let DATA = {};
+    const state = { variant:null, type:null, class:null, stage:null };
+
+    const variantRow = document.getElementById('variantRow');
+    const typeRow = document.getElementById('typeRow');
+    const classRow = document.getElementById('classRow');
+    const stageCol = document.getElementById('stageCol');
+    const cellTitle = document.getElementById('cellTitle');
+    const cellBody = document.getElementById('cellBody');
+
+    function renderRow(rowEl, items, selected, level){
+      rowEl.innerHTML = "";
+      items.forEach(item=>{
+        const btn = document.createElement('button');
+        btn.textContent = item;
+        btn.className = 'option'+(selected===item? ' active':'');
+        btn.onclick = ()=>{ state[level] = (state[level]===item ? null : item); render(); };
+        rowEl.appendChild(btn);
+      });
+    }
+
+    function renderCol(colEl, items, selected, level){
+      colEl.innerHTML = "";
+      items.forEach(item=>{
+        const btn = document.createElement('button');
+        btn.textContent = item;
+        btn.className = 'option'+(selected===item? ' active':'');
+        btn.onclick = ()=>{ state[level] = (state[level]===item ? null : item); render(); };
+        colEl.appendChild(btn);
+      });
+    }
+
+    function renderContent(){
+      if (state.variant && state.type && state.class && state.stage){
+        const data = DATA?.[state.variant]?.[state.type]?.[state.class]?.[state.stage];
+        if (!data){
+          cellTitle.textContent = "Содержимое комбинации";
+          cellBody.textContent = "Нет данных для этой комбинации.";
+          return;
+        }
+        cellTitle.textContent = `${state.variant} × ${state.type} × ${state.class} × ${state.stage}`;
+        cellBody.innerHTML = `
+          <h3>Описание стадии</h3>
+          <p>${data.stageDescription || "(пусто)"}</p>
+          <h3>Описание выбора подхода</h3>
+          <p>${data.approachDescription || "(пусто)"}</p>
+          <h3>Подходы</h3>
+          <div class="approaches">
+            ${Object.entries(data.approaches).map(([k,v])=>
+              `<div class="approach-card"><strong>${k}</strong><br>${v || "(пусто)"}</div>`
+            ).join('')}
+          </div>
+          <h3>Критерии</h3>
+          <div class="criteria-block">
+            <strong>Качественные:</strong>
+            <ul>${(data.criteria.qualitative.length ? data.criteria.qualitative : ["(нет)"]).map(c=>`<li>${c}</li>`).join('')}</ul>
+            <strong>Количественные:</strong>
+            <ul>${(data.criteria.quantitative.length ? data.criteria.quantitative : ["(нет)"]).map(c=>`<li>${c}</li>`).join('')}</ul>
+          </div>
+        `;
+      } else {
+        cellTitle.textContent = "Содержимое комбинации";
+        cellBody.textContent = "Выберите все параметры";
+      }
+    }
+
+    function render(){
+      renderRow(variantRow, VARIANTS, state.variant, 'variant');
+      renderRow(typeRow, TYPES, state.type, 'type');
+      renderRow(classRow, CLASSES, state.class, 'class');
+      renderCol(stageCol, STAGES, state.stage, 'stage');
+      renderContent();
+    }
+
+    // Загружаем JSON из файла
+    fetch("matrix-data-template.json")
+      .then(resp => resp.json())
+      .then(json => {
+        DATA = json;
+        render();
+      })
+      .catch(err => {
+        cellBody.textContent = "Ошибка загрузки данных: " + err;
+      });
+  </script>
+</body>
+</html>
